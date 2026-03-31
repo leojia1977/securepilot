@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SecuPilot Dashboard</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg:      #0d1117;
+    --card:    #161b22;
+    --border:  #30363d;
+    --text:    #c9d1d9;
+    --muted:   #8b949e;
+    --accent:  #58a6ff;
+    --red:     #f85149;
+    --orange:  #d29922;
+    --yellow:  #d29922;
+    --green:   #3fb950;
+    --gray:    #6e7681;
+  }
+
+  body { background: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; font-size: 14px; }
+
+  /* ── Top Bar ────────────────────────────────────────────────────── */
+  .topbar {
+    display: flex; align-items: center; justify-content: space-between;
+    background: var(--card); border-bottom: 1px solid var(--border);
+    padding: 12px 24px; position: sticky; top: 0; z-index: 100;
+  }
+  .topbar h1 { font-size: 18px; font-weight: 700; color: var(--accent); }
+  .metrics { display: flex; gap: 32px; }
+  .metric { text-align: center; }
+  .metric .val { font-size: 22px; font-weight: 700; color: var(--text); }
+  .metric .lbl { font-size: 11px; color: var(--muted); margin-top: 2px; }
+  .status-dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; margin-right: 6px; }
+  .status-dot.ok  { background: var(--green); box-shadow: 0 0 6px var(--green); }
+  .status-dot.err { background: var(--red);   box-shadow: 0 0 6px var(--red); }
+  #statusLabel { font-size: 13px; color: var(--muted); }
+
+  /* ── Main Layout ────────────────────────────────────────────────── */
+  .main { display: flex; height: calc(100vh - 57px); }
+  .panel-left  { flex: 0 0 60%; overflow-y: auto; border-right: 1px solid var(--border); }
+  .panel-right { flex: 1; overflow-y: auto; padding: 20px; }
+
+  /* ── Table ──────────────────────────────────────────────────────── */
+  .panel-left h2 { padding: 16px 20px 8px; font-size: 14px; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; }
+  table { width: 100%; border-collapse: collapse; }
+  th { background: var(--card); color: var(--muted); font-size: 11px; text-transform: uppercase; letter-spacing: .05em; padding: 10px 16px; text-align: left; border-bottom: 1px solid var(--border); position: sticky; top: 0; }
+  td { padding: 10px 16px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+  tr.event-row { cursor: pointer; transition: background .15s; }
+  tr.event-row:hover { background: rgba(88,166,255,.06); }
+  tr.event-row.active { background: rgba(88,166,255,.12); }
+
+  /* ── Badges ─────────────────────────────────────────────────────── */
+  .badge { display: inline-block; padding: 2px 8px; border-radius: 12px; font-size: 11px; font-weight: 600; text-transform: uppercase; }
+  .badge-critical { background: rgba(248,81,73,.2);  color: #f85149; border: 1px solid rgba(248,81,73,.4); }
+  .badge-high     { background: rgba(210,153,34,.2); color: #d29922; border: 1px solid rgba(210,153,34,.4); }
+  .badge-medium   { background: rgba(56,139,253,.2); color: #58a6ff; border: 1px solid rgba(56,139,253,.4); }
+  .badge-low      { background: rgba(110,118,129,.2);color: #8b949e; border: 1px solid rgba(110,118,129,.4); }
+  .badge-pending  { background: rgba(210,153,34,.15);color: #d29922; }
+  .badge-accepted { background: rgba(63,185,80,.15); color: #3fb950; }
+  .badge-rejected { background: rgba(248,81,73,.15); color: #f85149; }
+  .badge-auto     { background: rgba(110,118,129,.15);color: #8b949e; }
+  .badge-imm      { background: rgba(248,81,73,.2);  color: #f85149; }
+  .badge-1h       { background: rgba(210,153,34,.2); color: #d29922; }
+  .badge-24h      { background: rgba(56,139,253,.2); color: #58a6ff; }
+
+  .btn-approve { background: none; border: 1px solid var(--green); color: var(--green); padding: 3px 10px; border-radius: 4px; cursor: pointer; font-size: 12px; }
+  .btn-approve:hover { background: rgba(63,185,80,.15); }
+
+  /* ── Detail Panel ───────────────────────────────────────────────── */
+  .panel-right h2 { font-size: 15px; color: var(--text); margin-bottom: 16px; }
+  .placeholder { color: var(--muted); margin-top: 60px; text-align: center; }
+  .score-row { display: flex; align-items: baseline; gap: 12px; margin-bottom: 16px; }
+  .score-big { font-size: 40px; font-weight: 700; }
+  .section { margin-bottom: 20px; }
+  .section-title { font-size: 11px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); margin-bottom: 8px; }
+
+  /* Kill chain timeline */
+  .timeline { list-style: none; position: relative; padding-left: 20px; }
+  .timeline::before { content: ""; position: absolute; left: 6px; top: 0; bottom: 0; width: 2px; background: var(--border); }
+  .timeline li { position: relative; margin-bottom: 14px; }
+  .timeline li::before { content: ""; position: absolute; left: -17px; top: 5px; width: 10px; height: 10px; border-radius: 50%; background: var(--accent); border: 2px solid var(--bg); }
+  .tl-tactic { font-size: 11px; color: var(--accent); font-weight: 600; }
+  .tl-tech   { font-size: 10px; color: var(--muted); }
+  .tl-desc   { font-size: 13px; color: var(--text); margin-top: 2px; }
+  .tl-ts     { font-size: 10px; color: var(--muted); }
+
+  /* Recommendations */
+  .rec-item { background: var(--card); border: 1px solid var(--border); border-radius: 6px; padding: 10px 12px; margin-bottom: 8px; }
+  .rec-action { font-size: 13px; color: var(--text); margin-bottom: 4px; }
+  .rec-scope  { font-size: 11px; color: var(--muted); }
+
+  /* Approve block */
+  .approve-block { background: var(--card); border: 1px solid var(--border); border-radius: 8px; padding: 16px; margin-top: 20px; }
+  .approve-block h3 { font-size: 13px; margin-bottom: 10px; }
+  .approve-block textarea { width: 100%; background: var(--bg); border: 1px solid var(--border); color: var(--text); border-radius: 4px; padding: 8px; font-size: 12px; resize: vertical; height: 60px; }
+  .approve-btns { display: flex; gap: 8px; margin-top: 10px; }
+  .btn-accept { background: rgba(63,185,80,.15); border: 1px solid var(--green); color: var(--green); padding: 6px 18px; border-radius: 4px; cursor: pointer; font-size: 13px; }
+  .btn-reject { background: rgba(248,81,73,.15); border: 1px solid var(--red);   color: var(--red);   padding: 6px 18px; border-radius: 4px; cursor: pointer; font-size: 13px; }
+  .btn-accept:hover { background: rgba(63,185,80,.3); }
+  .btn-reject:hover { background: rgba(248,81,73,.3); }
+  .toast { position: fixed; bottom: 24px; right: 24px; background: var(--card); border: 1px solid var(--border); padding: 12px 20px; border-radius: 6px; font-size: 13px; z-index: 999; display: none; }
+
+  @media (max-width: 900px) {
+    .main { flex-direction: column; height: auto; }
+    .panel-left, .panel-right { flex: none; width: 100%; border-right: none; }
+    .panel-left { border-bottom: 1px solid var(--border); }
+    .metrics { gap: 16px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <h1>🛡 SecuPilot</h1>
+  <div class="metrics">
+    <div class="metric"><div class="val" id="mToday">—</div><div class="lbl">今日事件</div></div>
+    <div class="metric"><div class="val" id="mMtta">—</div><div class="lbl">MTTA 均值 (min)</div></div>
+    <div class="metric"><div class="val" id="mAcc">—</div><div class="lbl">接受率</div></div>
+  </div>
+  <div><span class="status-dot" id="statusDot"></span><span id="statusLabel">检查中…</span></div>
+</div>
+
+<div class="main">
+  <div class="panel-left">
+    <h2>事件列表 <span id="evtCount" style="font-weight:400;font-size:12px;"></span></h2>
+    <table>
+      <thead>
+        <tr>
+          <th>时间</th><th>风险</th><th>摘要</th><th>ATT&CK 战术</th><th>状态</th><th>操作</th>
+        </tr>
+      </thead>
+      <tbody id="evtBody"></tbody>
+    </table>
+  </div>
+  <div class="panel-right" id="detailPanel">
+    <div class="placeholder">← 点击左侧事件查看详情</div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const API_BASE = "http://localhost:8080";
+
+// ── 工具函数 ──────────────────────────────────────────────────────
+function esc(s) {
+  return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+}
+function fmtTs(ts) {
+  if (!ts) return "—";
+  try { return new Date(ts).toLocaleString("zh-CN", {month:"2-digit",day:"2-digit",hour:"2-digit",minute:"2-digit"}); }
+  catch { return ts.slice(0,16); }
+}
+function riskBadge(level) {
+  const map = {critical:"badge-critical",high:"badge-high",medium:"badge-medium",low:"badge-low"};
+  return `<span class="badge ${map[level]||'badge-low'}">${esc(level)}</span>`;
+}
+function statusBadge(s) {
+  const map = {pending:"badge-pending",accepted:"badge-accepted",rejected:"badge-rejected",auto_approved:"badge-auto"};
+  const lbl = {pending:"待审批",accepted:"已接受",rejected:"已拒绝",auto_approved:"自动通过"};
+  return `<span class="badge ${map[s]||''}">${lbl[s]||esc(s)}</span>`;
+}
+function prioBadge(p) {
+  const map = {immediate:"badge-imm",within_1h:"badge-1h",within_24h:"badge-24h"};
+  const lbl = {immediate:"立即",within_1h:"1h内",within_24h:"24h内"};
+  return `<span class="badge ${map[p]||''}">${lbl[p]||esc(p)}</span>`;
+}
+function showToast(msg, ok=true) {
+  const t = document.getElementById("toast");
+  t.textContent = msg;
+  t.style.display = "block";
+  t.style.color = ok ? "var(--green)" : "var(--red)";
+  setTimeout(() => t.style.display="none", 3000);
+}
+
+// ── 顶部指标 ──────────────────────────────────────────────────────
+async function loadMetrics() {
+  try {
+    const r = await fetch(`${API_BASE}/api/metrics/mtta`);
+    if (!r.ok) throw new Error();
+    const d = await r.json();
+    document.getElementById("mToday").textContent = d.total_events_today ?? "0";
+    document.getElementById("mMtta").textContent  = d.mtta_avg_minutes != null ? d.mtta_avg_minutes.toFixed(1) : "0.0";
+    document.getElementById("mAcc").textContent   = d.acceptance_rate  != null ? (d.acceptance_rate*100).toFixed(0)+"%" : "—";
+    document.getElementById("statusDot").className   = "status-dot ok";
+    document.getElementById("statusLabel").textContent = "正常运行";
+  } catch {
+    document.getElementById("statusDot").className   = "status-dot err";
+    document.getElementById("statusLabel").textContent = "API 不可达";
+  }
+}
+
+// ── 事件列表 ──────────────────────────────────────────────────────
+let _activeThread = null;
+async function loadEvents() {
+  try {
+    const r = await fetch(`${API_BASE}/api/events?limit=50`);
+    if (!r.ok) return;
+    const d = await r.json();
+    const tbody = document.getElementById("evtBody");
+    document.getElementById("evtCount").textContent = `(${d.total} 条)`;
+    tbody.innerHTML = "";
+    (d.events || []).forEach(ev => {
+      const tr = document.createElement("tr");
+      tr.className = "event-row" + (ev.thread_id === _activeThread ? " active" : "");
+      tr.dataset.tid = ev.thread_id;
+      const tactics = (ev.mitre_tactics||[]).slice(0,3).map(t=>`<code style="font-size:10px;color:var(--accent)">${esc(t)}</code>`).join(" ");
+      const approveBtn = ev.status === "pending"
+        ? `<button class="btn-approve" onclick="openApprove('${esc(ev.thread_id)}',event)">审批</button>`
+        : "";
+      tr.innerHTML = `
+        <td style="white-space:nowrap;color:var(--muted)">${fmtTs(ev.timestamp)}</td>
+        <td>${riskBadge(ev.risk_level)} <small style="color:var(--muted)">${ev.risk_score?.toFixed(1)||""}</small></td>
+        <td style="max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${esc(ev.summary)}">${esc(ev.summary||"—")}</td>
+        <td>${tactics||"—"}</td>
+        <td>${statusBadge(ev.status)}</td>
+        <td>${approveBtn}</td>
+      `;
+      tr.addEventListener("click", () => loadDetail(ev.thread_id));
+      tbody.appendChild(tr);
+    });
+  } catch {}
+}
+
+// ── 事件详情 ──────────────────────────────────────────────────────
+async function loadDetail(threadId) {
+  _activeThread = threadId;
+  document.querySelectorAll(".event-row").forEach(r => {
+    r.classList.toggle("active", r.dataset.tid === threadId);
+  });
+  const panel = document.getElementById("detailPanel");
+  panel.innerHTML = `<div class="placeholder" style="margin-top:40px">加载中…</div>`;
+  try {
+    const r = await fetch(`${API_BASE}/api/events/${encodeURIComponent(threadId)}`);
+    if (!r.ok) { panel.innerHTML=`<div class="placeholder">事件不存在</div>`; return; }
+    const d = await r.json();
+    const ti = d.analysis_result || {};
+    const kc = d.kill_chain || {};
+    const recs = d.recommendations || [];
+    const score = d.risk_score || 0;
+    const scoreColor = score>=9?"var(--red)":score>=7?"var(--orange)":score>=5?"var(--accent)":"var(--gray)";
+
+    // Kill chain HTML
+    const stages = kc.kill_chain_stages || [];
+    const kcHtml = stages.length
+      ? `<ul class="timeline">${stages.map(s=>`
+          <li>
+            <div class="tl-ts">${esc(s.timestamp||"")}</div>
+            <div class="tl-tactic">${esc(s.tactic||"")} <span class="tl-tech">${esc(s.technique_id||"")}</span></div>
+            <div class="tl-desc">${esc(s.description||"")}</div>
+          </li>`).join("")}</ul>`
+      : `<p style="color:var(--muted);font-size:13px">暂无杀伤链数据</p>`;
+
+    // Recommendations HTML
+    const recsHtml = recs.length
+      ? recs.map(r=>`
+          <div class="rec-item">
+            <div class="rec-action">${prioBadge(r.priority)} ${esc(r.action||"")}</div>
+            <div class="rec-scope">影响范围：${esc(r.impact_scope||"")}</div>
+          </div>`).join("")
+      : `<p style="color:var(--muted);font-size:13px">暂无建议</p>`;
+
+    // Approve block
+    const showApprove = d.approval_status === "pending";
+    const approveHtml = showApprove ? `
+      <div class="approve-block">
+        <h3>人工审批</h3>
+        <textarea id="rejectReason" placeholder="拒绝原因（可选）…"></textarea>
+        <div class="approve-btns">
+          <button class="btn-accept" onclick="submitApprove('${esc(threadId)}','accepted')">✓ 接受</button>
+          <button class="btn-reject" onclick="submitApprove('${esc(threadId)}','rejected')">✗ 拒绝</button>
+        </div>
+      </div>` : "";
+
+    panel.innerHTML = `
+      <div class="score-row">
+        <div class="score-big" style="color:${scoreColor}">${score.toFixed(1)}</div>
+        ${riskBadge(score>=9?"critical":score>=7?"high":score>=5?"medium":"low")}
+        ${statusBadge(d.approval_status)}
+      </div>
+      <div class="section">
+        <div class="section-title">线程 ID</div>
+        <code style="font-size:11px;color:var(--muted)">${esc(threadId)}</code>
+      </div>
+      <div class="section">
+        <div class="section-title">根因摘要</div>
+        <p style="font-size:13px;line-height:1.6">${esc(kc.summary || ti.kill_chain_stage || "—")}</p>
+      </div>
+      <div class="section">
+        <div class="section-title">ATT&CK 杀伤链时间线</div>
+        ${kcHtml}
+      </div>
+      <div class="section">
+        <div class="section-title">响应建议</div>
+        ${recsHtml}
+      </div>
+      ${approveHtml}
+    `;
+  } catch(e) {
+    panel.innerHTML = `<div class="placeholder">加载失败：${esc(e.message)}</div>`;
+  }
+}
+
+// ── 审批操作 ──────────────────────────────────────────────────────
+function openApprove(threadId, e) {
+  e.stopPropagation();
+  loadDetail(threadId);
+}
+
+async function submitApprove(threadId, action) {
+  const reason = document.getElementById("rejectReason")?.value || null;
+  try {
+    const r = await fetch(`${API_BASE}/api/events/${encodeURIComponent(threadId)}/approve`, {
+      method: "POST",
+      headers: {"Content-Type":"application/json"},
+      body: JSON.stringify({action, reason, analyst_id:"dashboard-user"}),
+    });
+    const d = await r.json();
+    if (d.success) {
+      showToast(action === "accepted" ? "已接受" : "已拒绝");
+      loadEvents();
+      loadDetail(threadId);
+    } else {
+      showToast("操作失败", false);
+    }
+  } catch(e) {
+    showToast("网络错误：" + e.message, false);
+  }
+}
+
+// ── 初始化 + 定时刷新 ─────────────────────────────────────────────
+loadMetrics();
+loadEvents();
+setInterval(loadMetrics, 30000);
+setInterval(loadEvents,  10000);
+</script>
+</body>
+</html>

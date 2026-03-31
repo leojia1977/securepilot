@@ -4,6 +4,10 @@ Mock vLLM 推理服务
 模拟 Qwen3-32B-Instruct Thinking Mode 响应
 """
 
+import os
+os.environ["NO_PROXY"] = "localhost,127.0.0.1"
+os.environ["no_proxy"] = "localhost,127.0.0.1"
+
 import asyncio
 import random
 import time

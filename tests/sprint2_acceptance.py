@@ -11,6 +11,10 @@ Sprint 2 验收脚本：杀伤链重建器 + 响应建议引擎
 
 from __future__ import annotations
 
+import os
+os.environ["NO_PROXY"] = "localhost,127.0.0.1"
+os.environ["no_proxy"] = "localhost,127.0.0.1"
+
 import asyncio
 import sys
 import time

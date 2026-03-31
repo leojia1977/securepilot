@@ -16,6 +16,10 @@ Sprint 1 MITRE 准确率验收脚本（T1）
 
 from __future__ import annotations
 
+import os
+os.environ["NO_PROXY"] = "localhost,127.0.0.1"
+os.environ["no_proxy"] = "localhost,127.0.0.1"
+
 import asyncio
 import json
 import sys
