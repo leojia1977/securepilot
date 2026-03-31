@@ -1,0 +1,74 @@
+请修改 mock/vllm_server.py 中的 route_to_template 函数。
+
+当前问题：几乎所有请求都落到 ROOT_CAUSE_TEMPLATE，
+导致验收脚本拿到的 technique_id 全是 T1566.001。
+
+修改要求：
+route_to_template 函数要从请求的 messages 内容中
+提取 alert_name 和 alert_description 字段的关键词，
+按以下规则路由到对应的响应模板：
+
+规则1：含 "SMB" "Admin Share" "lateral" "T1021" → 返回：
+{"risk_score": 8.2, "is_true_positive": true, "confidence": "high",
+ "root_cause": "检测到 SMB 横向移动行为",
+ "mitre_mapping": [{"tactic": "LateralMovement",
+   "technique_id": "T1021.002",
+   "technique_name": "SMB/Windows Admin Shares",
+   "evidence": "异常 SMB 管理共享访问"}],
+ "affected_assets": [], "recommendations": []}
+
+规则2：含 "PowerShell" "powershell" "encoded" "T1059" → 返回：
+{"risk_score": 7.5, ...,
+ "mitre_mapping": [{"tactic": "Execution",
+   "technique_id": "T1059.001",
+   "technique_name": "PowerShell", "evidence": "混淆PowerShell执行"}]}
+
+规则3：含 "Registry" "Run Key" "persistence" "T1547" → 返回：
+{"mitre_mapping": [{"tactic": "Persistence",
+   "technique_id": "T1547.001",
+   "technique_name": "Registry Run Keys / Startup Folder",
+   "evidence": "注册表Run键写入"}]}
+
+规则4：含 "LSASS" "lsass" "credential" "mimikatz" "T1003" → 返回：
+{"mitre_mapping": [{"tactic": "CredentialAccess",
+   "technique_id": "T1003.001",
+   "technique_name": "LSASS Memory", "evidence": "LSASS内存读取"}]}
+
+规则5：含 "C2" "beacon" "outbound" "T1071" → 返回：
+{"mitre_mapping": [{"tactic": "CommandAndControl",
+   "technique_id": "T1071.001",
+   "technique_name": "Web Protocols", "evidence": "C2信标通信"}]}
+
+规则6：含 "scan" "port scan" "T1046" → 返回：
+{"mitre_mapping": [{"tactic": "Discovery",
+   "technique_id": "T1046",
+   "technique_name": "Network Service Discovery",
+   "evidence": "内网端口扫描"}]}
+
+规则7：含 "encrypt" "ransomware" "lockbit" "T1486" → 返回：
+{"mitre_mapping": [{"tactic": "Impact",
+   "technique_id": "T1486",
+   "technique_name": "Data Encrypted for Impact",
+   "evidence": "大量文件加密"}]}
+
+规则8：含 "supply chain" "npm" "T1195" → 返回：
+{"mitre_mapping": [{"tactic": "InitialAccess",
+   "technique_id": "T1195.002",
+   "technique_name": "Compromise Software Supply Chain",
+   "evidence": "恶意软件包注入"}]}
+
+规则9：含 "exfil" "outbound data" "T1048" → 返回：
+{"mitre_mapping": [{"tactic": "Exfiltration",
+   "technique_id": "T1048.002",
+   "technique_name": "Exfiltration Over Asymmetric Encrypted Non-C2 Protocol",
+   "evidence": "大量数据外传"}]}
+
+规则10：含 "phishing" "macro" "invoice" "T1566" → 返回原来的
+ROOT_CAUSE_TEMPLATE（T1566.001）
+
+以上规则按顺序匹配，第一个命中的规则生效。
+所有返回的 JSON 结构保持与现有模板完全一致（包含
+risk_score, is_true_positive, confidence, root_cause,
+mitre_mapping, affected_assets, recommendations 字段）。
+
+修改完成后重启 uvicorn 服务，告诉我可以重跑验收脚本了。

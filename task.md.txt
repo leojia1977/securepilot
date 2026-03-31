@@ -1,0 +1,32 @@
+# 任务：找出失败样本的真实 alert_name，修复 Mock 路由
+
+## 第一步：运行这个命令，输出所有30条样本的信息
+在终端执行：
+python -c "
+from tests.fixtures.synthetic_alerts import ALL_SAMPLES
+for s in ALL_SAMPLES:
+    gt = s['ground_truth']['technique_id']
+    an = s['alert_name']
+    sc = s.get('scenario', '?')
+    print(f'{gt:<15} | {an}')
+"
+把完整输出告诉我。
+
+## 第二步：根据输出结果，在 mock/vllm_server.py 的
+ALERT_NAME_TO_TECHNIQUE 字典最前面，为以下每个
+technique_id 补充精准关键词映射：
+T1547.001, T1135, T1005, T1074.001, T1490,
+T1036.005, T1553.004, T1048.002, T1041,
+T1053.005, T1110.003, T1550.002, T1573.001,
+T1083, T1021.001, T1491.001, T1059.004, T1106
+
+关键词必须是该样本 alert_name 字段实际包含的子字符串（小写）。
+
+## 第三步：完成后说"TASK完成，可以重跑验收脚本"
+```
+
+---
+
+**第二步：在 Claude Code 输入**
+```
+TASK.md 已更新为新任务，请重新读取 TASK.md 并执行新任务

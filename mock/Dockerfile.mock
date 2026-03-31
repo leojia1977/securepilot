@@ -1,0 +1,17 @@
+FROM python:3.11-slim
+
+WORKDIR /app
+
+# 安装依赖
+RUN pip install --no-cache-dir \
+    fastapi==0.111.0 \
+    uvicorn==0.29.0 \
+    pydantic==2.7.0
+
+# 复制源码
+COPY vllm_server.py .
+COPY response_templates.py .
+
+EXPOSE 8000
+
+CMD ["python", "-m", "uvicorn", "vllm_server:app", "--host", "0.0.0.0", "--port", "8000"]

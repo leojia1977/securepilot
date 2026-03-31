@@ -1,0 +1,94 @@
+请彻底重写 mock/vllm_server.py 中的路由逻辑。
+
+当前问题：用字符串搜索整段请求文本，导致关键词误命中。
+
+新方案：从请求的 messages 内容中解析 <ALERT_DATA> 标签里的 JSON，
+提取每个 event 的 alert_name 字段，用精准映射表决定返回哪个 technique。
+
+请按以下步骤重写：
+
+第一步：新增解析函数 extract_alert_names(messages) 
+- 从 messages 列表的 content 里找到 <ALERT_DATA>...</ALERT_DATA> 之间的文本
+- 用 json.loads 解析，如果是列表取第一个元素，如果是单个对象直接用
+- 返回该 event 的 alert_name 字符串（小写）
+- 解析失败返回空字符串""
+
+第二步：新增精准映射表 ALERT_NAME_TO_TECHNIQUE
+用字典存储 alert_name 关键词 → technique 映射：
+
+ALERT_NAME_TO_TECHNIQUE = {
+    "macro": ("T1566.001", "InitialAccess", "Spearphishing Attachment"),
+    "phishing": ("T1566.001", "InitialAccess", "Spearphishing Attachment"),
+    "invoice": ("T1566.001", "InitialAccess", "Spearphishing Attachment"),
+    "powershell": ("T1059.001", "Execution", "PowerShell"),
+    "encoded powershell": ("T1059.001", "Execution", "PowerShell"),
+    "registry run": ("T1547.001", "Persistence", "Registry Run Keys / Startup Folder"),
+    "run key": ("T1547.001", "Persistence", "Registry Run Keys / Startup Folder"),
+    "scheduled task": ("T1053.005", "Persistence", "Scheduled Task"),
+    "lsass": ("T1003.001", "CredentialAccess", "LSASS Memory"),
+    "credential": ("T1003.001", "CredentialAccess", "LSASS Memory"),
+    "brute force": ("T1110.003", "CredentialAccess", "Password Spraying"),
+    "password spray": ("T1110.003", "CredentialAccess", "Password Spraying"),
+    "smb admin share": ("T1021.002", "LateralMovement", "SMB/Windows Admin Shares"),
+    "admin share": ("T1021.002", "LateralMovement", "SMB/Windows Admin Shares"),
+    "lateral movement smb": ("T1021.002", "LateralMovement", "SMB/Windows Admin Shares"),
+    "pass the hash": ("T1550.002", "LateralMovement", "Pass the Hash"),
+    "c2 beacon": ("T1071.001", "CommandAndControl", "Web Protocols"),
+    "c2 communication": ("T1071.001", "CommandAndControl", "Web Protocols"),
+    "encrypted c2": ("T1573.001", "CommandAndControl", "Encrypted Channel"),
+    "port scan": ("T1046", "Discovery", "Network Service Discovery"),
+    "network scan": ("T1046", "Discovery", "Network Service Discovery"),
+    "file enumeration": ("T1083", "Discovery", "File and Directory Discovery"),
+    "share enumeration": ("T1135", "Discovery", "Network Share Discovery"),
+    "rdp lateral": ("T1021.001", "LateralMovement", "Remote Desktop Protocol"),
+    "file collection": ("T1005", "Collection", "Data from Local System"),
+    "data staging": ("T1074.001", "Collection", "Local Data Staging"),
+    "file encrypt": ("T1486", "Impact", "Data Encrypted for Impact"),
+    "ransomware": ("T1486", "Impact", "Data Encrypted for Impact"),
+    "shadow copy": ("T1490", "Impact", "Inhibit System Recovery"),
+    "defacement": ("T1491.001", "Impact", "Internal Defacement"),
+    "supply chain": ("T1195.002", "InitialAccess", "Compromise Software Supply Chain"),
+    "malicious package": ("T1195.002", "InitialAccess", "Compromise Software Supply Chain"),
+    "bash script": ("T1059.004", "Execution", "Unix Shell"),
+    "native api": ("T1106", "Execution", "Native API"),
+    "masquerading": ("T1036.005", "DefenseEvasion", "Match Legitimate Name or Location"),
+    "code signing": ("T1553.004", "DefenseEvasion", "Code Signing"),
+    "exfiltration": ("T1048.002", "Exfiltration", "Exfiltration Over Asymmetric Encrypted Non-C2 Protocol"),
+    "large outbound": ("T1048.002", "Exfiltration", "Exfiltration Over Asymmetric Encrypted Non-C2 Protocol"),
+    "data transfer": ("T1041", "Exfiltration", "Exfiltration Over C2 Channel"),
+}
+
+第三步：重写 route_to_template(messages) 函数
+def route_to_template(messages):
+    alert_name = extract_alert_names(messages)  # 已小写
+    
+    # 遍历映射表，找第一个命中的关键词
+    for keyword, (tech_id, tactic, tech_name) in ALERT_NAME_TO_TECHNIQUE.items():
+        if keyword in alert_name:
+            return build_response_template(tech_id, tactic, tech_name, alert_name)
+    
+    # 完全没命中时，返回通用模板但带默认值
+    return build_response_template("T1190", "InitialAccess", "Exploit Public-Facing Application", alert_name)
+
+第四步：新增 build_response_template(tech_id, tactic, tech_name, alert_name) 函数
+动态构建返回的 JSON 结构，格式与现有模板完全一致：
+{
+  "risk_score": 7.5,
+  "is_true_positive": True,
+  "confidence": "high",
+  "root_cause": f"检测到 {tech_name} 相关行为: {alert_name}",
+  "mitre_mapping": [{
+    "tactic": tactic,
+    "technique_id": tech_id,
+    "technique_name": tech_name,
+    "evidence": f"基于告警 {alert_name} 的分析"
+  }],
+  "affected_assets": [],
+  "recommendations": [{
+    "action": "隔离受影响主机并展开调查",
+    "impact_scope": "仅影响该主机",
+    "priority": "immediate"
+  }]
+}
+
+修改完成后告诉我，不要重启 uvicorn（--reload 模式会自动热重载）。
