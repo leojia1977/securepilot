@@ -1,26 +1,187 @@
-# 任务：修复代理问题导致的连接超时
+# Sprint 4 任务：PoC 交付包
 
-## 背景
-系统设置了 HTTP_PROXY，导致所有 httpx/requests 请求
-包括 localhost 都被代理拦截，造成超时。
+---
 
-## 修复一：tests/sprint3_acceptance.py
-在文件顶部 import 之后，加入以下代码：
+## 任务一：创建 deploy/docker-compose.prod.yml
 
-import os
-os.environ["NO_PROXY"] = "localhost,127.0.0.1"
-os.environ["no_proxy"] = "localhost,127.0.0.1"
+生产部署的 Docker Compose 文件（区别于 Sprint 0 的 mock 版本）。
+包含以下服务：
 
-## 修复二：tests/sprint1_acceptance.py 和 tests/sprint2_acceptance.py
-同样在文件顶部加入相同的两行代码。
+securepilot-api:
+  build: .
+  ports: ["8080:8080"]
+  environment:
+    - VLLM_BASE_URL=${VLLM_BASE_URL}
+    - KAFKA_BOOTSTRAP_SERVERS=${KAFKA_BOOTSTRAP_SERVERS}
+    - KAFKA_MOCK=${KAFKA_MOCK:-false}
+    - DINGTALK_WEBHOOK=${DINGTALK_WEBHOOK}
+    - DASHBOARD_URL=${DASHBOARD_URL}
+    - NO_PROXY=localhost,127.0.0.1,vllm
+    - no_proxy=localhost,127.0.0.1,vllm
+  volumes:
+    - ./data:/app/data
+  depends_on: [postgres, qdrant, redis]
+  restart: unless-stopped
 
-## 修复三：src/api/main.py
-在文件顶部加入：
-import os
-os.environ["NO_PROXY"] = "localhost,127.0.0.1"
-os.environ["no_proxy"] = "localhost,127.0.0.1"
+postgres:
+  image: postgres:16-alpine
+  environment:
+    POSTGRES_DB: securepilot
+    POSTGRES_USER: ${DB_USER}
+    POSTGRES_PASSWORD: ${DB_PASSWORD}
+  volumes: ["postgres_data:/var/lib/postgresql/data"]
+  restart: unless-stopped
 
-## 修复四：mock/vllm_server.py
-同样在文件顶部加入相同两行。
+qdrant:
+  image: qdrant/qdrant:v1.9.0
+  volumes: ["qdrant_data:/qdrant/storage"]
+  restart: unless-stopped
 
-## 完成后说"TASK完成"
+redis:
+  image: redis:7-alpine
+  restart: unless-stopped
+
+volumes:
+  postgres_data:
+  qdrant_data:
+
+---
+
+## 任务二：创建 deploy/Dockerfile
+
+FROM python:3.11-slim
+WORKDIR /app
+COPY requirements.txt .
+RUN pip install -r requirements.txt --no-cache-dir
+COPY . .
+RUN mkdir -p data
+CMD ["uvicorn", "src.api.main:app", "--host", "0.0.0.0", "--port", "8080"]
+
+---
+
+## 任务三：创建 deploy/setup.py（一键部署脚本）
+
+一个 Python 脚本，客户运行后自动完成：
+
+### 步骤1：环境检查
+检查以下命令是否可用：
+- python --version（需要 3.11+）
+- docker --version
+- docker compose version
+任何一个不满足就打印错误并退出。
+
+### 步骤2：创建 .env 文件
+如果 .env 不存在，从 .env.example 复制一份。
+如果 .env 已存在，跳过并提示"已存在，跳过"。
+
+### 步骤3：创建数据目录
+mkdir -p data
+
+### 步骤4：安装 Python 依赖
+pip install -r requirements.txt -q
+
+### 步骤5：询问部署模式
+打印：
+"请选择部署模式："
+"[1] Mock 模式（无需 GPU，用于演示）"
+"[2] 生产模式（需要已部署的 vLLM 服务）"
+读取用户输入，根据选择设置 KAFKA_MOCK 环境变量。
+
+### 步骤6：启动服务验证
+Mock 模式下运行：
+python tests/sprint0_acceptance.py
+全部通过后打印"环境验证通过，系统就绪"。
+
+### 步骤7：打印访问地址
+打印：
+"=========================================="
+"SecuPilot 部署完成"
+"Dashboard: http://localhost:8080"
+"API 文档:  http://localhost:8080/docs"
+"健康检查: http://localhost:8080/health"
+"=========================================="
+
+---
+
+## 任务四：创建 deploy/DEPLOYMENT_CHECKLIST.md
+
+客户自行验收的检查单，格式如下：
+
+# SecuPilot PoC 部署验收检查单
+
+## 环境要求
+- [ ] 服务器 OS：Linux（Ubuntu 20.04+）或 Windows Server 2019+
+- [ ] Python 3.11+
+- [ ] Docker 24.0+（生产模式）
+- [ ] 内网可访问 Kafka Bootstrap Servers
+- [ ] 端口 8080 未被占用
+
+## 部署验证
+- [ ] 运行 python deploy/setup.py 无报错
+- [ ] 浏览器访问 http://[服务器IP]:8080/health 返回 {"status":"ok"}
+- [ ] 浏览器访问 http://[服务器IP]:8080/docs 可看到 API 文档页面
+
+## 功能验证
+- [ ] 打开 src/dashboard/index.html，顶部状态栏显示绿色
+- [ ] 调用 POST /api/trigger 触发分析，15秒内 GET /api/events 返回结果
+- [ ] 事件详情页显示杀伤链时间线（至少3个阶段）
+- [ ] 审批操作：点击 Accept 后事件状态变为 accepted
+- [ ] GET /api/metrics/mtta 返回合理数字
+
+## 性能验证
+- [ ] 单事件分析端到端延迟 < 20秒（Mock模式）
+- [ ] Dashboard 页面加载 < 3秒
+
+## 安全验证
+- [ ] 服务运行期间无外部网络请求
+  验证方法：在防火墙日志中检查服务器出口流量
+
+## 验收签字
+客户代表：________________  日期：________________
+实施工程师：________________  日期：________________
+
+---
+
+## 任务五：创建 demo/inject_demo_data.py（演示数据注入工具）
+
+向系统注入一批演示用的攻击场景数据，用于客户演示。
+
+实现逻辑：
+1. 从 tests/fixtures/synthetic_alerts.py 读取 ALL_SAMPLES
+2. 按场景分三批注入（场景A、B、C各一批）
+3. 每批调用 POST http://localhost:8080/api/trigger
+   传入该场景的全部告警
+4. 每批注入后等待 20 秒让分析完成
+5. 打印进度：
+   "注入场景A（APT鱼叉钓鱼）... 完成，thread_id=xxx"
+   "注入场景B（勒索软件扩散）... 完成，thread_id=xxx"
+   "注入场景C（供应链攻击）... 完成，thread_id=xxx"
+6. 最后调用 GET /api/events 打印：
+   "演示数据注入完成，共 N 条事件可在 Dashboard 查看"
+7. 记得在文件顶部设置：
+   import os
+   os.environ["NO_PROXY"] = "localhost,127.0.0.1"
+   os.environ["no_proxy"] = "localhost,127.0.0.1"
+
+---
+
+## 任务六：创建 tests/sprint4_acceptance.py
+
+验收8项：
+
+1. deploy/Dockerfile 文件存在
+2. deploy/docker-compose.prod.yml 文件存在
+3. deploy/setup.py 文件存在且可被 Python 导入（语法正确）
+4. deploy/DEPLOYMENT_CHECKLIST.md 文件存在且 > 2KB
+5. demo/inject_demo_data.py 文件存在
+6. 运行 demo/inject_demo_data.py（需要 FastAPI 在运行）
+   等待 70 秒后检查 GET /api/events 返回 >= 3 条事件
+7. GET /api/metrics/mtta 的 total_events_today >= 3
+8. src/dashboard/index.html 文件大小 > 5KB（已验证，再确认）
+
+输出格式与前三次一致。
+
+---
+
+## 完成后
+说"TASK完成，请确认 FastAPI 在运行后执行验收脚本"

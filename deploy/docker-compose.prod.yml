@@ -1,0 +1,46 @@
+version: "3.9"
+
+services:
+  securepilot-api:
+    build: ..
+    ports:
+      - "8080:8080"
+    environment:
+      - VLLM_BASE_URL=${VLLM_BASE_URL}
+      - KAFKA_BOOTSTRAP_SERVERS=${KAFKA_BOOTSTRAP_SERVERS}
+      - KAFKA_MOCK=${KAFKA_MOCK:-false}
+      - DINGTALK_WEBHOOK=${DINGTALK_WEBHOOK}
+      - DASHBOARD_URL=${DASHBOARD_URL}
+      - NO_PROXY=localhost,127.0.0.1,vllm
+      - no_proxy=localhost,127.0.0.1,vllm
+    volumes:
+      - ./data:/app/data
+    depends_on:
+      - postgres
+      - qdrant
+      - redis
+    restart: unless-stopped
+
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: securepilot
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    restart: unless-stopped
+
+  qdrant:
+    image: qdrant/qdrant:v1.9.0
+    volumes:
+      - qdrant_data:/qdrant/storage
+    restart: unless-stopped
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+  qdrant_data:
